@@ -6,7 +6,7 @@ bw2preagg/__pycache__/
 data/
 docs/
 io/
-io-old/
+io_old/
 notebooks/
 notes/
 notes.md
