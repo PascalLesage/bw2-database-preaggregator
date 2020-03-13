@@ -1,0 +1,12 @@
+.idea/
+.pytest_cache/
+bw2preagg.egg-info
+bw2preagg/old/
+bw2preagg/__pycache__/
+data/
+docs/
+io/
+io-old/
+notebooks/
+notes/
+notes.md
