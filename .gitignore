@@ -5,7 +5,6 @@ bw2preagg/old/
 bw2preagg/__pycache__/
 data/
 docs/
-io/
 io_old/
 notebooks/
 notes/
