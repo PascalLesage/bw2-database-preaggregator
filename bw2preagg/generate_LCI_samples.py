@@ -80,7 +80,7 @@ def techno_dicts_equal(ref_techno_dict, new_techno_dict):
 
     Difference in database name are ignored.
     """
-    ref_techno_dict_for_comparison = {k[1]:v for k, v in ref_techno_dict.items()}
+    ref_techno_dict_for_comparison = {k[1]: v for k, v in ref_techno_dict.items()}
     new_techno_dict_for_comparison = {k[1]: v for k, v in new_techno_dict.items()}
     return ref_techno_dict_for_comparison == new_techno_dict_for_comparison
 

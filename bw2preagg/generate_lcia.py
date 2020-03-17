@@ -54,7 +54,7 @@ def calculate_LCIA_array_from_arrays(
         Life cycle inventory array, with rows equal to elementary flows
         and columns equal to separate LCI,
         e.g. from different MonteCarlo iterations
-    lca_specific_biosphere_indices: list of int
+    B_row_indices: list of int
         List of biosphere matrix row indices
     cfs: list of float
         List of associated characterization factors
