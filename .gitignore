@@ -4,7 +4,9 @@ bw2preagg.egg-info
 bw2preagg/old/
 bw2preagg/__pycache__/
 data/
-docs/
+docs/build/
+docs/make.bat
+docs/Makefile
 io_old/
 notebooks/
 notes/
