@@ -3,13 +3,14 @@ import math
 from brightway2 import *
 import presamples
 import pickle
+import numpy as np
 
 
 def missing_useful_files(result_dir):
     """Return list of missing useful files"""
     useful_files = [
         'ordered_activity_codes.json',  # activity codes
-        'deterministic_lci.pickle',  # dict {codes:LCI}
+        'det_lci_dict.pickle',  # dict {codes:LCI}
         'product_dict.pickle',  # lca.product_dict
         'bio_dict.pickle',  # lca.biosphere_dict
         'activity_dict.pickle',  # lca.activity_dict
@@ -71,6 +72,13 @@ def _check_database(database_name):
     return database_name
 
 
+def _check_method(method):
+    """Check that the method exists in brightway2 project"""
+    if not method in methods:
+        raise ValueError("{} is not a valid method in this project".format(method))
+    return method
+
+
 def _check_result_dir(result_dir):
     """Check that result_dir exists"""
     if not Path(result_dir).is_dir():
@@ -93,6 +101,139 @@ def _get_campaign(sample_batch, expect_base_presamples=False):
             campaign = presamples.Campaign.create(name="c{}".format(sample_batch))
             campaign.save()
     return campaign
+
+
+def _get_LCI_dir(result_dir, samples_batch, must_exist=True):
+    """Return LCI directory path if it exists else raise ValueError"""
+    result_dir = Path(_check_result_dir(result_dir))
+    LCI_dir = result_dir / "LCI" / str(samples_batch)
+    if not LCI_dir.is_dir():
+        if must_exist:
+            raise ValueError("No directory at {}".format(LCI_dir))
+        else:
+            LCI_dir.mkdir(parents=True)
+    return LCI_dir
+
+
+def _get_LCIA_dir(result_dir, samples_batch, method, must_exist=True):
+    """Return LCI directory path if it exists else raise ValueError"""
+    result_dir = Path(_check_result_dir(result_dir))
+    method = _check_method(method)
+    abbr = Method(method).get_abbreviation()
+    LCIA_dir = result_dir / "LCIA" / abbr / str(samples_batch)
+    if not LCIA_dir.is_dir():
+        if must_exist:
+            raise ValueError("No directory at {}".format(LCIA_dir))
+        else:
+            LCIA_dir.mkdir(parents=True)
+    return LCIA_dir
+
+
+def _get_det_lci_dict(result_dir):
+    """Load det_lci_dict"""
+    result_dir = Path(_check_result_dir(result_dir))
+    det_lci_dict_fp = result_dir / "common_files" / "det_lci_dict.pickle"
+    if not det_lci_dict_fp.is_file():
+        raise ValueError("No det_lci_dict.pickle file found in common_files folder")
+    with open(det_lci_dict_fp, "rb") as f:
+        det_lci_dict = pickle.load(f)
+    return det_lci_dict
+
+
+def _get_det_lcia_dict(result_dir, method):
+    """Load dict with LCIA scores"""
+    result_dir = _check_result_dir(result_dir)
+    method = _check_method(method)
+    abbr = Method(method).get_abbreviation()
+    det_lcia_dict_fp = result_dir / "LCIA" / "deterministic_dicts" / "{}.pickle".format(abbr)
+    if not det_lcia_dict_fp.is_file():
+        raise ValueError("No det_lcia_dict.pickle file found in common_files folder")
+    with open(det_lcia_dict_fp, "rb") as f:
+        det_lcia_dict = pickle.load(f)
+    return det_lcia_dict
+
+
+def load_LCI_array(result_dir, act_code, samples_batch=0):
+    """Return existing LCI array
+
+    Parameters
+    -----------
+    result_dir : str
+        Path to directory where results are stored
+    act_code : str
+        Code of the activity
+    sample_batch : int, default=0
+        Integer id for sample batch. Used for campaigns names and for
+        generating a seed for the RNG. The maximum value is 14.
+
+    Returns
+    --------
+    LCI samples : numpy.ndarray
+        LCI samples, with rows = elementary flows and columns = iterations
+    """
+    LCI_dir = Path(_get_LCI_dir(result_dir, samples_batch))
+    arr_fp = LCI_dir / "{}.npy".format(act_code)
+    if not arr_fp.is_file():
+        raise ValueError("File {} does not exist".format(arr_fp))
+    return np.load(str(arr_fp))
+
+
+def load_LCIA_array(result_dir, act_code, method, samples_batch=0):
+    """Return existing LCIA array
+
+    Parameters
+    -----------
+    result_dir : str
+        Path to directory where results are stored
+    act_code : str
+        Code of the activity
+    method : tuple
+        LCIA method identification in brightway2 (tuple)
+    sample_batch : int, default=0
+        Integer id for sample batch. Used for campaigns names and for
+        generating a seed for the RNG. The maximum value is 14.
+
+    Returns
+    --------
+    LCIA samples : numpy.ndarray
+        LCIA samples, with columns = iterations.
+        Normally only consisting of one row representing the total score.
+        Can also consist of one row per elementary flow for which there is a
+        non-null characterization factor.
+    """
+    LCIA_dir = Path(_get_LCIA_dir(result_dir, samples_batch, method))
+    arr_fp = LCIA_dir / "{}.npy".format(act_code)
+    if not arr_fp.is_file():
+        raise ValueError("No file at {}".format(str(arr_fp)))
+    return np.load(str(arr_fp))
+
+
+def load_det_LCI(result_dir, act_code, det_lci_dict=None):
+    """Return precalculated deterministic LCI"""
+    result_dir = Path(_check_result_dir(result_dir))
+    if not det_lci_dict:
+        det_lci_dict = _get_det_lci_dict(result_dir)
+    if not act_code in det_lci_dict:
+        raise ValueError("No deterministic result for activity with code {} "
+                         "in det_lci_dict".format(
+            act_code
+        ))
+    return det_lci_dict[act_code]
+
+
+def load_det_lcia(result_dir, method, act_code, det_lcia_dict=None):
+    """Return precalculated deterministic LCIA score"""
+    result_dir = Path(_check_result_dir(result_dir))
+    method = _check_method(method)
+    if not det_lcia_dict:
+        det_lcia_dict = _get_det_lcia_dict(result_dir, method)
+    if not act_code in det_lcia_dict:
+        raise ValueError("No deterministic result for activity with code {} "
+                         "in deterministic LCIA dictionary".format(
+            act_code
+        ))
+    return det_lcia_dict[act_code]
+
 
 
 def generate_seed_from_pi(i):
