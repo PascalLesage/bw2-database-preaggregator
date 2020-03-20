@@ -170,5 +170,5 @@ def _generate_common_files(result_dir, database_name):
             print(err)
             print("******************")
             lci_dict[code] = "Missing"
-    with open(common_files_dir/'deterministic_lci.pickle', "wb") as f:
+    with open(common_files_dir/'det_lci_dict.pickle', "wb") as f:
         pickle.dump(lci_dict, f)
