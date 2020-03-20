@@ -40,7 +40,7 @@ The top-level function is ``dispatch_lci_calculators``. It is typically the only
 are actually available, splits the work first across slices (to run on multiple computers in a cluster)
 and then across CPUs (to use MultiProcessing) and invokes ``set_up_lci_calculations``.
 
-.. autofunction:: bw2preagg.generate_LCI_samples.dispatch_lci_calculators
+.. autofunction:: bw2preagg.lci.dispatch_lci_calculators
 
 ``set_up_lci_calculations``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -48,7 +48,7 @@ and then across CPUs (to use MultiProcessing) and invokes ``set_up_lci_calculati
 The ``set_up_lci_calculations`` function then gathers the necessary information for the specified subset of activities
 and invokes the subsequent ``calculate_lci_array`` for each activity for which LCI arrays need to be calculated.
 
-.. autofunction:: bw2preagg.generate_LCI_samples.set_up_lci_calculations
+.. autofunction:: bw2preagg.lci.set_up_lci_calculations
 
 ``calculate_lci_array``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -56,4 +56,4 @@ and invokes the subsequent ``calculate_lci_array`` for each activity for which L
 ``calculate_lci_array`` is the function where the actual LCI calculation occurs, using the brightway2 ``MonteCarloLCA``
 class.
 
-.. autofunction:: bw2preagg.generate_LCI_samples.calculate_lci_array
+.. autofunction:: bw2preagg.lci.calculate_lci_array

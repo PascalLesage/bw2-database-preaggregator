@@ -27,5 +27,5 @@ results that are based on these arrays.
 Technical reference
 -----------------------------
 
-.. autofunction:: bw2preagg.generate_base_presample_resource.generate_base_presamples
+.. autofunction:: bw2preagg.base_presamples.generate_base_presamples
 

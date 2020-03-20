@@ -31,4 +31,4 @@ and `land transformation <https://github.com/CIRAIG/bw2landbalancer>`_ exchange 
 Technical reference
 -----------------------------
 
-.. autofunction:: bw2preagg.generate_balancing_presample_resources.generate_balancing_presamples
+.. autofunction:: bw2preagg.balancing_presamples.generate_balancing_presamples

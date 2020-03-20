@@ -4,7 +4,7 @@ from presamples import Campaign, PresampleResource, PresamplesPackage, PackagesD
 from bw2preagg.setup_project import setup_project, _generate_common_files, \
     missing_useful_files
 from bw2preagg import utils
-from bw2preagg.generate_base_presample_resource import generate_base_presamples
+from bw2preagg.base_presamples import generate_base_presamples
 import os
 from pathlib import Path
 import numpy as np

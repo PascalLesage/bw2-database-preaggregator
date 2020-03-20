@@ -25,15 +25,15 @@ Technical reference
 ``get_cf_with_indices``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: bw2preagg.generate_lcia.get_cf_with_indices
+.. autofunction:: bw2preagg.lcia.get_cf_with_indices
 
-.. autofunction:: bw2preagg.generate_lcia.calculate_LCIA_array_from_arrays
+.. autofunction:: bw2preagg.lcia.calculate_LCIA_array_from_arrays
 
-.. autofunction:: bw2preagg.generate_lcia.calculate_LCIA_array_from_activity_code
+.. autofunction:: bw2preagg.lcia.calculate_LCIA_array_from_activity_code
 
-.. autofunction:: bw2preagg.generate_lcia.save_all_LCIA_score_arrays
+.. autofunction:: bw2preagg.lcia.save_all_LCIA_score_arrays
 
-.. autofunction:: bw2preagg.generate_lcia.calculate_single_det_LCIA_score
+.. autofunction:: bw2preagg.lcia.calculate_single_det_LCIA_score
 
-.. autofunction:: bw2preagg.generate_lcia.calculate_all_det_LCIA_score
+.. autofunction:: bw2preagg.lcia.calculate_all_det_LCIA_score
 
