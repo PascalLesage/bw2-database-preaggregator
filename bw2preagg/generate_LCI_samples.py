@@ -1,6 +1,7 @@
 from brightway2 import *
-from .utils import _check_project, _check_database, _check_result_dir,\
-    missing_useful_files, _get_campaign, get_ref_bio_dict_from_common_files
+from .utils import _check_project, _check_database, _check_result_dir, \
+    missing_useful_files, _get_campaign, get_ref_bio_dict_from_common_files, \
+    _get_LCI_dir
 
 import numpy as np
 import os
@@ -67,10 +68,31 @@ def calculate_lci_array(database_name, act_code, presamples_paths, g_dimensions,
 
 def set_up_lci_calculations(activity_list, result_dir, worker_id, database_name,
                             samples_batch, project_name):
-    """ """
+    """Dispatch LCI calculation for a list of activities
+
+    Parameters
+    --------------
+    activity_list : list
+        List of codes to activities for which LCI arrays should be calculated
+    result_dir : str
+        Path to directory where results are stored
+    worker_id : int
+        Identification of the worker if using MultiProcessing, used only for
+        error messages.
+    database_name : str
+        Name of the LCI database
+    sample_batch : int, default=0
+        Integer id for sample batch. Used for campaigns names and for
+        generating a seed for the RNG. The maximum value is 14.
+    project_name : str
+        Name of the brightway2 project where the database is imported
+
+    Returns
+    ---------
+    None
+    """
     projects.set_current(_check_project(project_name))
-    g_samples_dir = Path(result_dir)/"lci"/str(samples_batch)
-    g_samples_dir.mkdir(exist_ok=True, parents=True)
+    g_samples_dir = _get_LCI_dir(result_dir, samples_batch, must_exist=False)
     g_samples_dir_temp = g_samples_dir / "temp"
     g_samples_dir_temp.mkdir(exist_ok=True, parents=True)
 
@@ -96,8 +118,9 @@ def set_up_lci_calculations(activity_list, result_dir, worker_id, database_name,
             print("************Failure for {} by {}: {}************".format(act_code, worker_id, err))
     print("Worker ID: {}\n\tTotal of {} LCIs of {} iterations"
           "\n\tTotal time: {} minutes\n\tAverage time: {} minutes per LCI".format(
-        worker_id, len(activity_list), total_iterations, sum(times)/60, (sum(times)/len(times))/60
+        worker_id, len(activity_list), total_iterations, sum(times) / 60, (sum(times) / len(times)) / 60
     ))
+
 
 def techno_dicts_equal(ref_techno_dict, new_techno_dict):
     """ Returns True if two product or activity dicts are functionally equivalent
@@ -107,6 +130,7 @@ def techno_dicts_equal(ref_techno_dict, new_techno_dict):
     ref_techno_dict_for_comparison = {k[1]: v for k, v in ref_techno_dict.items()}
     new_techno_dict_for_comparison = {k[1]: v for k, v in new_techno_dict.items()}
     return ref_techno_dict_for_comparison == new_techno_dict_for_comparison
+
 
 def get_techno_dicts_translator(ref_techno_dict, new_techno_dict):
     """ Return dict where k, v are resp. indices in reference and new techno matrix
@@ -127,6 +151,32 @@ def dispatch_lci_calculators(project_name, database_name, result_dir, samples_ba
     """ Dispatches LCI array calculations to distinct processes (multiprocessing)
 
     If number_of_slices/slice_id are not None, then only a subset of database activities are processed.
+
+    The number of iterations is determined by the number of columns in the
+    presample packages referenced in the corresponding campaign.
+
+    If slice_id and number_of_slices are not None, will only treat a subset of activities.
+
+    Parameters
+    -----------
+    project_name : str
+        Name of the brightway2 project where the database is imported
+    database_name : str
+        Name of the LCI database
+    result_dir : str
+        Path to directory where results are stored
+    sample_batch : int, default=0
+        Integer id for sample batch. Used for campaigns names and for
+        generating a seed for the RNG. The maximum value is 14.
+    parallel_jobs : int
+        Number of parallel jobs to run using multiprocessing
+    slice_id : int, default=None
+        ID of slice. Useful when calculations are split across many computers or jobs on a computer cluster.
+        If None, LCI arrays are generated for all activities in the database.
+    number_of_slices : int, default=None
+        Number of slices over which the calculations are split.
+        Useful when calculations are split across many computers or jobs on a computer cluster.
+        If None, LCI arrays are generated for all activities in the database.
     """
     print("\n\n**************Dispatching LCI CALCULATORS**************\n\n")
     # Ensure base data exist and are valid
@@ -139,7 +189,7 @@ def dispatch_lci_calculators(project_name, database_name, result_dir, samples_ba
     _get_campaign(samples_batch, expect_base_presamples=True)
 
     # Create directory for LCI arrays
-    g_master_dir = result_dir / "lci"
+    g_master_dir = result_dir / "LCI"
     g_master_dir.mkdir(exist_ok=True)
     g_samples_dir = g_master_dir / "{}".format(samples_batch)
     g_samples_dir.mkdir(exist_ok=True)
@@ -147,13 +197,13 @@ def dispatch_lci_calculators(project_name, database_name, result_dir, samples_ba
     chunks = lambda l, n: [l[i:i + n] for i in range(0, len(l), n)]
 
     # Identify subset of activities to treat
-    with open(result_dir/"common_files"/"ordered_activity_codes.json", 'r') as f:
+    with open(result_dir / "common_files" / "ordered_activity_codes.json", 'r') as f:
         all_activity_codes = json.load(f)
     print("Total number of activities in database: ", len(all_activity_codes))
     if slice_id is None or number_of_slices is None:
         activity_codes = all_activity_codes
     else:
-        activity_codes = chunks(all_activity_codes, ceil(len(all_activity_codes)/(number_of_slices)))[slice_id]
+        activity_codes = chunks(all_activity_codes, ceil(len(all_activity_codes) / (number_of_slices)))[slice_id]
     print("Number of activities to treat in slice {} of {}: {}".format(
         slice_id, number_of_slices, len(activity_codes)))
     activities_to_treat = []
