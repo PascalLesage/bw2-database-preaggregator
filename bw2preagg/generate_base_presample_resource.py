@@ -10,7 +10,7 @@ from bw2preagg.utils import _check_project, _check_database,  _check_result_dir,
 
 def generate_base_presamples(project_name, database_name, result_dir, iterations,
                              sample_batch, overwrite_ps=True, ps_base_name="base"):
-    """Generate presamples for all elements of A and B matrices of given db
+    """Generate presamples for all elements of A and B matrices of given database
 
     The presamples are stored in a presamples resource in result_dir and added
     to a presamples campaign for easy reuse.
@@ -28,8 +28,8 @@ def generate_base_presamples(project_name, database_name, result_dir, iterations
     iterations : int
         Number of iterations to include in sample
     sample_batch : int, default=0
-        Sequential integer id for sample batch. Used for campaigns names and for
-        generating a seed for the RNG
+        Integer id for sample batch. Used for campaigns names and for
+        generating a seed for the RNG. The maximum value is 14.
     overwrite_ps : bool, default=True
         Overwrite presamples package if it exists
     ps_name_base : str, default="base"
@@ -42,6 +42,8 @@ def generate_base_presamples(project_name, database_name, result_dir, iterations
     projects.set_current(_check_project(project_name))
     db = Database(_check_database(database_name))
     result_dir = Path(_check_result_dir(result_dir))
+    if sample_batch > 14:
+        raise ValueError("Cannot use sample_batch value greater than 14")
     sacrificial_LCA = LCA({act:act.get('production amount', 1) for act in db})
     sacrificial_LCA.lci()
     seed = generate_seed_from_pi(sample_batch)

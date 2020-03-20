@@ -11,8 +11,32 @@ from math import ceil
 import json
 import presamples
 
-def calculate_lci_array(database_name, act_code, presamples, g_dimensions, total_iterations, g_samples_dir):
-    """Return LCI array using specified presamples for given activity """
+
+def calculate_lci_array(database_name, act_code, presamples_paths, g_dimensions,
+                        total_iterations, g_samples_dir):
+    """Return LCI array using specified presamples for given activity
+
+    Typically invoked from generate_LCI_samples.set_up_lci_calculations
+
+    Parameters
+    --------------
+    database_name : str
+        Name of the LCI database
+    act_code : str
+        code of the activity
+    presamples_paths : list
+        list of paths to presamples packages
+    g_dimensions : int
+        Number of rows in biosphere matrix
+    total_iterations : int
+        Number of iterations (i.e. number of columns in presample arrays)
+    g_samples_dir : str
+        Path to directory where LCI arrays will be saved
+
+    Returns
+    ---------
+    None
+    """
 
     lci = np.memmap(
         filename=str(g_samples_dir / "temp" / "{}.npy".format(act_code)),
@@ -21,7 +45,7 @@ def calculate_lci_array(database_name, act_code, presamples, g_dimensions, total
         shape=(g_dimensions, total_iterations)
     )
     act = get_activity((database_name, act_code))
-    mc = MonteCarloLCA({act: act['production amount']}, presamples=presamples)
+    mc = MonteCarloLCA({act: act['production amount']}, presamples=presamples_paths)
     for i in range(total_iterations):
         try:
             next(mc)
@@ -50,13 +74,13 @@ def set_up_lci_calculations(activity_list, result_dir, worker_id, database_name,
     g_samples_dir_temp = g_samples_dir / "temp"
     g_samples_dir_temp.mkdir(exist_ok=True, parents=True)
 
-    ref_bio_dict = get_ref_bio_dict_from_common_files(Path(result_dir)/"common_files")
+    ref_bio_dict = get_ref_bio_dict_from_common_files(Path(result_dir) / "common_files")
     campaign = _get_campaign(str(samples_batch), expect_base_presamples=True)
     presample_paths = [p for p in campaign]
     assert presample_paths
     pps = [presamples.PresamplesPackage(p) for p in presample_paths]
     iterations = list(set([pp.ncols for pp in pps]))
-    assert len(iterations)==1
+    assert len(iterations) == 1
     total_iterations = iterations[0]
     print("Worker ID {}, requested iterations: {}".format(worker_id, total_iterations))
 
@@ -67,7 +91,7 @@ def set_up_lci_calculations(activity_list, result_dir, worker_id, database_name,
         try:
             calculate_lci_array(
                 database_name, act_code, presample_paths, g_dimensions, total_iterations, g_samples_dir)
-            times.append(time.time()-t0)
+            times.append(time.time() - t0)
         except Exception as err:
             print("************Failure for {} by {}: {}************".format(act_code, worker_id, err))
     print("Worker ID: {}\n\tTotal of {} LCIs of {} iterations"
@@ -96,6 +120,7 @@ def get_techno_dicts_translator(ref_techno_dict, new_techno_dict):
     new_bd_name = list(new_techno_dict.keys())[0][0]
     return {ref_techno_dict[(ref_bd_name, k[1])]: new_techno_dict[(new_bd_name, k[1])] for k in
             new_techno_dict.keys()}
+
 
 def dispatch_lci_calculators(project_name, database_name, result_dir, samples_batch,
                              parallel_jobs, slice_id=None, number_of_slices=None):

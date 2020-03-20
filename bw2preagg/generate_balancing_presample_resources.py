@@ -1,4 +1,3 @@
-import click
 from pathlib import Path
 import numpy as np
 from brightway2 import *
@@ -33,16 +32,23 @@ def generate_balancing_presamples(
     iterations : int
         Number of iterations to include in sample
     sample_batch : int, default=0
-        Sequential integer id for sample batch. Used for campaigns names and for
-        generating a seed for the RNG
+        Integer id for sample batch. Used for campaigns names and for
+        generating a seed for the RNG. The maximum value is 14.
     overwrite_ps : bool, default=True
         Overwrite presamples package if it exists
-    balance_water : bool
+    balance_water : bool, default=True
         Balance water exchanges
-    balance_land : bool
+    balance_land : bool, default=True
         Balance land transformation exchanges
-    ecoinvent_version : str
+    ecoinvent_version : str, default="3.6"
         Release number of ecoinvent database
+    land_from_patterns : list of string, default=['Transformation, from']
+        Patterns used to identify land transformation inputs
+    land_to_patterns : list of string, default=['Transformation, to']
+        Patterns used to identify land transformation outputs
+    expect_base_presamples : bool, default=True
+        If True, ValueError is raised if base presamples package for
+        corresponding samples_batch is missing
 
     Returns
     -------
