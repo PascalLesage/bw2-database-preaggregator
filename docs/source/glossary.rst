@@ -24,11 +24,21 @@ Important concepts
 
 .. glossary::
 
+    ``campaign``
+        TODO
+
+
     ``campaigns.db``
         Database in Brightway2 project used to manage presample ressources. Used by ``bw2preagg`` to store paths to
         base and balancing presample resources associated with a given :term:`samples batch`.
 
-    ``presample packages``
+    ``parallel_jobs``
+        Multiprocessing...
+
+    ``presamples package``
+        TODO
+
+    ``presamples resource``
         TODO
 
     ``project``
@@ -42,7 +52,10 @@ Important concepts
     ``samples batch``
         You know...
 
+    ``slices``
+        slices
 
+.. _file_structure:
 
 Structure of the result_dir
 ------------------------------
@@ -56,9 +69,52 @@ Structure of the result_dir
     │   ├── README
     │   └── wiki.py
     ├── presamples
-    │   ├── cgi3.py
-    │   ├── cgi3.py
-    │   ├── cgi3.py
-    │   └── cgi3.py
-
-
+    │   ├── base_0 (base presamples package, sample_batch id=0)
+    │   ├── water_0 (water exchange balancing presamples package, sample_batch id=0)
+    │   ├── land_0 (land transformation exchange balancing presamples package, sample_batch id=0)
+    │   ├── base_1
+    │   ├── water_1
+    │   └── land_1
+    ├── LCI
+    |   ├── 0 (sample_batch id = 0)
+    │   │   ├── code_0.npy (=elementary flows, columns=iterations)
+    │   │   ├── code_1.npy
+    │   │   ├── code_2.npy
+    │   │   ├── ...
+    │   │   └── code_n.npy
+    |   ├── 1 (sample_batch id)
+    │   │   ├── code_0.npy
+    │   │   ├── code_1.npy
+    │   │   ├── code_2.npy
+    │   │   ├── ...
+    │   │   └── code_n.npy
+    ├── LCIA
+    │   ├── method_abbrev_0
+    |   |   ├── 0 (sample_batch id)
+    |   │   │   ├── code_0.npy
+    |   │   │   ├── code_1.npy
+    |   │   │   ├── code_2.npy
+    |   │   │   ├── ...
+    |   │   │   └── code_n.npy
+    |   |   ├── 1 (sample_batch id)
+    |   │   │   ├── code_0.npy
+    |   │   │   ├── code_1.npy
+    |   │   │   ├── code_2.npy
+    |   │   │   ├── ...
+    |   │   │   └── code_n.npy
+    │   ├── method_abbrev_1
+    |   |   ├── 0 (sample_batch id)
+    |   │   │   ├── code_0.npy
+    |   │   │   ├── code_1.npy
+    |   │   │   ├── code_2.npy
+    |   │   │   ├── ...
+    |   │   │   └── code_n.npy
+    |   |   ├── 1 (sample_batch id)
+    |   │   │   ├── code_0.npy
+    |   │   │   ├── code_1.npy
+    |   │   │   ├── code_2.npy
+    |   │   │   ├── ...
+    |   │   │   └── code_n.npy
+    │   ├── deterministic_dicts
+    │   │   ├── method_abbrev_0.pickle
+    │   │   ├── method_abbrev_1.pickle

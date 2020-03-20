@@ -20,20 +20,20 @@ The samples are calculated in five steps:
 :ref:`setup`
    Executes series of actions to ready your system for sample generation: setup a brightway2 :term:`project`, import
    an ecoinvent database from ecoSpold files, and generate a number of files, stored in
-   :term:`common files directory`, that will be used by future steps.
+   :ref:`common files directory <file_structure>`, that will be used by future steps.
 
 :ref:`base_presamples`
-  Generate :term:`presample packages` for all **A** and **B** matrix elements. The presample packages will have as many rows
+  Generate a :term:`presamples package` for all **A** and **B** matrix elements. The presample package will have as many rows
   as there are matrix elements, and as many columns as the number of requested iterations. These will be injected in
   **A** and **B** matrices during LCI calculations in Step 4.
 
 :ref:`balancing_presamples`
-  (Optional) Generate :term:`presample packages` for water and land transformation exchanges that are *balanced*.
+  (Optional) Generate :term:`presamples package`s for water and land transformation exchanges that are *balanced*.
   These are also injected in **A** and **B** matrices during LCI calculations in Step 4, overriding the base presamples
   from Step 2.
 
 :ref:`generating_LCI`
-  Generate LCI arrays for all activities in the database. These use the :term:`presample packages` from previous steps.
+  Generate LCI arrays for all activities in the database. These use the :term:`presamples package` s from previous steps.
 
 :ref:`generating_LCIA`
   (Optional) Transform the LCI arrays from Step 4 to arrays of LCIA scores.

@@ -8,7 +8,9 @@ Step 1: Setup
 Introduction
 ------------------
 
-The ``setup_project`` does multiple things to  ready your system for sample generation:
+Setting things up to use ``bw2preagg`` is done through a single function, ``setup_project``,
+which is imported in the namespace with ``from bw2preagg import *``.
+This function does multiple things to ready your system for sample generation:
 
    - if required, sets up a brightway2 :term:`project`. To use an existing project, simply pass ``overwrite_project=False``
    - if required, import an ecoinvent database from ecoSpold files. To use an existing imported LCI database, simply pass
@@ -26,9 +28,3 @@ Technical reference
 .. autofunction:: bw2preagg.setup_project.setup_project
 
 
-.. _setup_CLI:
-
-CLI
-------------------
-
-Determine how to do this now.
