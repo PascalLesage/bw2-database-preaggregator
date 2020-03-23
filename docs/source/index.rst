@@ -3,8 +3,10 @@ bw2preagg
 
 bw2preagg is used to generate dependently sampled LCI and LCIA arrays for whole databases.
 
-It uses `Brightway2 framework <https://brightwaylca.dev/>`_ and `presamples <http://presamples.readthedocs.io/>`_,
-and generates outputs in formats that are compatible with both.
+It uses `Brightway2 framework <https://brightwaylca.dev/>`_ and `presamples <http://presamples.readthedocs.io/>`_.
+The arrays are stored as ``numpy.ndarray`` files, and can be integrated in Brightway2 models using other modules
+(`brightway2-aggregated <https://github.com/CIRAIG/brightway2-aggregated>`_,
+`presamples <http://presamples.readthedocs.io/>`_).
 
 The resulting result arrays allow the use of aggregated LCI or LCIA results (also known as cradle-to-gate results)
 in LCA while also correctly integrating the uncertainty of LCI data, see
@@ -15,10 +17,10 @@ when dealing with large LCI databases like ecoinvent. The functions are therefor
 calculations, by e.g. facilitating multiprocessing and breaking down the task in multiple "batches" that can run on
 different systems.
 
-The samples are calculated in five steps:
+The samples are calculated in six steps:
 
 :ref:`setup`
-   Executes series of actions to ready your system for sample generation: setup a brightway2 :term:`project`, import
+   Ready your system for sample generation: setup a brightway2 :term:`project`, import
    an ecoinvent database from ecoSpold files, and generate a number of files, stored in
    :ref:`common files directory <file_structure>`, that will be used by future steps.
 
@@ -28,15 +30,19 @@ The samples are calculated in five steps:
   **A** and **B** matrices during LCI calculations in Step 4.
 
 :ref:`balancing_presamples`
-  (Optional) Generate :term:`presamples package`s for water and land transformation exchanges that are *balanced*.
+  (Optional) Generate a **balanced** :term:`presamples package` for water and another for land transformation exchanges.
   These are also injected in **A** and **B** matrices during LCI calculations in Step 4, overriding the base presamples
   from Step 2.
 
 :ref:`generating_LCI`
-  Generate LCI arrays for all activities in the database. These use the :term:`presamples package` s from previous steps.
+  Generate LCI arrays for all activities in the database. These use the presamples packages from previous steps.
 
 :ref:`generating_LCIA`
   (Optional) Transform the LCI arrays from Step 4 to arrays of LCIA scores.
+
+:ref:`concat`
+  (Optional) Concatenate LCI or LCIA arrays from multiple :term:`samples_batch` folders.
+
 
 If you just want to run and calculate the samples, you can jump to the :ref:`run_through` section.
 
@@ -54,8 +60,9 @@ Table of contents
    setup_project
    base_presamples
    balancing_presamples
-   lci_generation
-   lcia_generation
+   lci
+   lcia
+   concat
    run_through
    glossary
 

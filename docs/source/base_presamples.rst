@@ -10,7 +10,7 @@ Introduction
 
 This step generates a :term:`presamples package` for all technosphere (**A**) and biosphere (**B**) elements for an
 LCI database. The only function that the user needs for this step is ``generate_base_presamples``,
-which is imported in the namespace with ``from bw2preagg import *``..
+which is imported in the namespace with ``from bw2preagg import *``.
 
 The resulting presample package is stored in the `presamples` subdirectory of the
 :ref:`result_dir directory <file_structure>`. Information about the presamples packages are

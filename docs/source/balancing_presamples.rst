@@ -14,6 +14,9 @@ This optional step generates balanced water and land transformation exchanges fo
 and stores each in a dedicated :term:`presamples package`. The only function that the user needs
 for this step is ``generate_balancing_presamples``, which is imported in the namespace with ``from bw2preagg import *``.
 
+.. warning::
+  The calculation of these balanced exchanges takes a long time (on the order of a few hours). However, it is only done
+  once - this is the advantage of ``bw2preagg``.
 
 The presamples packages are also stored in the `presamples` subdirectory of the
 :ref:`result_dir directory <file_structure>`, and a corresponding :term:`presamples resource` is
