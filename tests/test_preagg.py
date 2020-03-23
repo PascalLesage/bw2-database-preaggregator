@@ -86,7 +86,7 @@ def test_generate_base_presamples(db, result_dir):
         database_name='db',
         result_dir=result_dir,
         iterations=10,
-        sample_batch=0,
+        samples_batch=0,
         overwrite_ps=True,
         ps_base_name="base"
     )

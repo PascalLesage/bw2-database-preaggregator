@@ -9,7 +9,7 @@ from bw2preagg.utils import _check_project, _check_database,  _check_result_dir,
 
 
 def generate_base_presamples(project_name, database_name, result_dir, iterations,
-                             sample_batch, overwrite_ps=True, ps_base_name="base"):
+                             samples_batch, overwrite_ps=True, ps_base_name="base"):
     """Generate presamples for all elements of A and B matrices of given database
 
     The presamples are stored in a presamples resource in result_dir and added
@@ -27,7 +27,7 @@ def generate_base_presamples(project_name, database_name, result_dir, iterations
         Path to directory where results are stored
     iterations : int
         Number of iterations to include in sample
-    sample_batch : int, default=0
+    samples_batch : int, default=0
         Integer id for sample batch. Used for campaigns names and for
         generating a seed for the RNG. The maximum value is 14.
     overwrite_ps : bool, default=True
@@ -42,11 +42,11 @@ def generate_base_presamples(project_name, database_name, result_dir, iterations
     projects.set_current(_check_project(project_name))
     db = Database(_check_database(database_name))
     result_dir = Path(_check_result_dir(result_dir))
-    if sample_batch > 14:
-        raise ValueError("Cannot use sample_batch value greater than 14")
+    if samples_batch > 14:
+        raise ValueError("Cannot use samples_batch value greater than 14")
     sacrificial_LCA = LCA({act:act.get('production amount', 1) for act in db})
     sacrificial_LCA.lci()
-    seed = generate_seed_from_pi(sample_batch)
+    seed = generate_seed_from_pi(samples_batch)
     print("Generating technosphere matrix samples")
     tech_samples, tech_indices = indices_and_samples_from_params(
         sacrificial_LCA.tech_params, iterations=iterations,
@@ -60,7 +60,7 @@ def generate_base_presamples(project_name, database_name, result_dir, iterations
     print("Storing presamples")
     ps_dir = result_dir/"presamples"
     ps_dir.mkdir(exist_ok=True)
-    ress_id = "{}_{}".format(ps_base_name, sample_batch)
+    ress_id = "{}_{}".format(ps_base_name, samples_batch)
 
     ps_id, ps_path = presamples.create_presamples_package(
         matrix_data=[
@@ -70,11 +70,11 @@ def generate_base_presamples(project_name, database_name, result_dir, iterations
         name=ress_id, id_=ress_id, overwrite=overwrite_ps,
         dirpath=ps_dir, seed='sequential'
     )
-    ps_ress = presamples.PresampleResource.create(
+    ps_ress, _ = presamples.PresampleResource.get_or_create(
         name=ress_id,
         path=ps_path
     )
-    campaign = _get_campaign(sample_batch)
+    campaign = _get_campaign(samples_batch)
     if not ps_ress in list(campaign.packages):
         campaign.add_presample_resource(ps_ress)
 

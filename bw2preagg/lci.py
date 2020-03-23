@@ -1,7 +1,6 @@
 from brightway2 import *
 from .utils import _check_project, _check_database, _check_result_dir, \
-    missing_useful_files, _get_campaign, get_ref_bio_dict_from_common_files, \
-    _get_LCI_dir
+    missing_useful_files, _get_campaign, get_ref_bio_dict_from_common_files, _get_lci_dir
 
 import numpy as np
 import os
@@ -81,7 +80,7 @@ def set_up_lci_calculations(activity_list, result_dir, worker_id, database_name,
         error messages.
     database_name : str
         Name of the LCI database
-    sample_batch : int, default=0
+    samples_batch : int, default=0
         Integer id for sample batch. Used for campaigns names and for
         generating a seed for the RNG. The maximum value is 14.
     project_name : str
@@ -92,7 +91,7 @@ def set_up_lci_calculations(activity_list, result_dir, worker_id, database_name,
     None
     """
     projects.set_current(_check_project(project_name))
-    g_samples_dir = _get_LCI_dir(result_dir, samples_batch, must_exist=False)
+    g_samples_dir = _get_lci_dir(result_dir, 'probabilistic', samples_batch, must_exist=False)
     g_samples_dir_temp = g_samples_dir / "temp"
     g_samples_dir_temp.mkdir(exist_ok=True, parents=True)
 
@@ -165,7 +164,7 @@ def dispatch_lci_calculators(project_name, database_name, result_dir, samples_ba
         Name of the LCI database
     result_dir : str
         Path to directory where results are stored
-    sample_batch : int, default=0
+    samples_batch : int, default=0
         Integer id for sample batch. Used for campaigns names and for
         generating a seed for the RNG. The maximum value is 14.
     parallel_jobs : int
@@ -189,8 +188,8 @@ def dispatch_lci_calculators(project_name, database_name, result_dir, samples_ba
     _get_campaign(samples_batch, expect_base_presamples=True)
 
     # Create directory for LCI arrays
-    g_master_dir = result_dir / "LCI"
-    g_master_dir.mkdir(exist_ok=True)
+    g_master_dir = result_dir / "probabilistic" / "LCI"
+    g_master_dir.mkdir(exist_ok=True, parents=True)
     g_samples_dir = g_master_dir / "{}".format(samples_batch)
     g_samples_dir.mkdir(exist_ok=True)
 
@@ -202,10 +201,12 @@ def dispatch_lci_calculators(project_name, database_name, result_dir, samples_ba
     print("Total number of activities in database: ", len(all_activity_codes))
     if slice_id is None or number_of_slices is None:
         activity_codes = all_activity_codes
+        print("Number of activities to treat in single slice: {}".format(
+            len(activity_codes)))
     else:
         activity_codes = chunks(all_activity_codes, ceil(len(all_activity_codes) / (number_of_slices)))[slice_id]
-    print("Number of activities to treat in slice {} of {}: {}".format(
-        slice_id, number_of_slices, len(activity_codes)))
+        print("Number of activities to treat in slice {} of {}: {}".format(
+            slice_id, number_of_slices, len(activity_codes)))
     activities_to_treat = []
     for act in activity_codes:
         lci_filename = "{}.npy".format(act)

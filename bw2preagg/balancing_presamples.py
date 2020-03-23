@@ -9,7 +9,7 @@ from bw2preagg.utils import _check_project, _check_database,  _check_result_dir,
 
 
 def generate_balancing_presamples(
-        project_name, database_name, result_dir, iterations, sample_batch,
+        project_name, database_name, result_dir, iterations, samples_batch,
         overwrite_ps=True, balance_water=True, balance_land=True,
         ecoinvent_version="3.6", land_from_patterns=['Transformation, from'],
         land_to_patterns=['Transformation, to'], expect_base_presamples=True):
@@ -31,7 +31,7 @@ def generate_balancing_presamples(
         Path to directory where results are stored
     iterations : int
         Number of iterations to include in sample
-    sample_batch : int, default=0
+    samples_batch : int, default=0
         Integer id for sample batch. Used for campaigns names and for
         generating a seed for the RNG. The maximum value is 14.
     overwrite_ps : bool, default=True
@@ -57,14 +57,14 @@ def generate_balancing_presamples(
     projects.set_current(_check_project(project_name))
     db = Database(_check_database(database_name))
     result_dir = Path(_check_result_dir(result_dir))
-    campaign = _get_campaign(sample_batch, expect_base_presamples)
-    seed = generate_seed_from_pi(sample_batch)
+    campaign = _get_campaign(samples_batch, expect_base_presamples)
+    seed = generate_seed_from_pi(samples_batch)
     ps_dir = result_dir / "presamples"
 
     if balance_water:
         print("Generating water balancing samples")
         np.random.seed(seed)
-        water_ress_id = "water_{}".format(sample_batch)
+        water_ress_id = "water_{}".format(samples_batch)
         water_balancer = DatabaseWaterBalancer(
             ecoinvent_version=ecoinvent_version, database_name=database_name
         )
@@ -72,7 +72,7 @@ def generate_balancing_presamples(
         water_ps_id, water_ps_path = water_balancer.create_presamples(
             name=water_ress_id, id_=water_ress_id, overwrite=overwrite_ps,
             dirpath=ps_dir, seed='sequential')
-        water_ps_ress = presamples.PresampleResource.create(
+        water_ps_ress, _ = presamples.PresampleResource.get_or_create(
             name=water_ress_id,
             path=water_ps_path
         )
@@ -82,7 +82,7 @@ def generate_balancing_presamples(
     if balance_land:
         print("Generating land transformation balancing samples")
         np.random.seed(seed)
-        land_ress_id = "land_{}".format(sample_batch)
+        land_ress_id = "land_{}".format(samples_batch)
         land_balancer = DatabaseLandBalancer(
             database_name=database_name,
             land_from_patterns=land_from_patterns,
@@ -92,7 +92,7 @@ def generate_balancing_presamples(
         land_ps_id, land_ps_path = land_balancer.create_presamples(
             name=land_ress_id, id_=land_ress_id, overwrite=overwrite_ps,
             dirpath=ps_dir, seed='sequential')
-        land_ps_ress = presamples.PresampleResource.create(
+        land_ps_ress, _ = presamples.PresampleResource.get_or_create(
             name=land_ress_id,
             path=land_ps_path
         )
