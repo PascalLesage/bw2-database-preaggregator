@@ -8,12 +8,13 @@ import pickle
 import json
 import numpy as np
 from brightway2 import *
-from .utils import missing_useful_files
+from .utils import missing_useful_files, _check_result_dir
 
 
 def setup_project(project_name, database_name, result_dir,
                   database_dir=None, overwrite_project=False,
-                  overwrite_database=False, force_write_common_files=False,
+                  overwrite_database=False, save_det_lci=True,
+                  force_write_common_files=False,
                   default_bw2setup=True):
     """ Create project, import databases and generate common files as required
 
@@ -39,6 +40,9 @@ def setup_project(project_name, database_name, result_dir,
     force_write_common_files : bool, default=True
         If True, then the common files are generated even if they already exist
         at given location
+    save_det_lci : bool, default=True
+        If True, deterministic LCI arrays are saved in the deterministic subfolder
+        of the result_dir
     default_bw2setup: bool, default=True
         If True, run bw2setup to include default elementary flows and LCIA methods
 
@@ -68,11 +72,20 @@ def setup_project(project_name, database_name, result_dir,
             Database(database_name).deregister()
         importer.write_database()
 
+    result_dir = Path(result_dir)
+    result_dir.mkdir(parents=True, exist_ok=True)
+
     # Generate common data
+    if missing_useful_files(result_dir) \
+            or force_write_common_files\
+            or save_det_lci:
+        sacrificial_lca = get_sacrificial_LCA(database_name)
     if missing_useful_files(result_dir) or force_write_common_files:
-        _generate_common_files(result_dir, database_name)
-    else:
-        print("No common files to generate")
+        _generate_common_files(result_dir, database_name, sacrificial_lca)
+    if save_det_lci:
+        with open(result_dir / 'common_files' / 'ordered_activity_codes.json', "r") as f:
+            activity_codes = json.load(f)
+        _save_det_lci(result_dir, activity_codes, database_name, sacrificial_lca)
 
 
 def _prepare_import(database_dir, database_name):
@@ -90,7 +103,6 @@ def _prepare_import(database_dir, database_name):
         raise ValueError(
             "database_dir does not exist, cannot import LCI data"
         )
-
     db_importer = SingleOutputEcospold2Importer(database_dir, database_name)
     db_importer.apply_strategies()
     if not db_importer.statistics()[2] == 0:
@@ -102,9 +114,9 @@ def _prepare_import(database_dir, database_name):
     return db_importer
 
 
-def _generate_common_files(result_dir, database_name):
+def _generate_common_files(result_dir, database_name, sacrificial_lca):
     """Generate and save common files used in subsequent steps"""
-    print("Generating common files")
+    print("\nGenerating common files")
     common_files_dir = Path(result_dir)/'common_files'
     common_files_dir.mkdir(exist_ok=True, parents=True)
 
@@ -115,9 +127,6 @@ def _generate_common_files(result_dir, database_name):
     with open(common_files_dir/'ordered_activity_codes.json', "w") as f:
         json.dump(activity_codes, f, indent=4)
 
-    # Generate sacrificial LCA whose attributes will be saved
-    collector_functional_unit = {act:act.get('production amount', 1) for act in db}
-    sacrificial_lca = LCA(collector_functional_unit)
     sacrificial_lca.lci()
 
     # Save various attributes for eventual reuse in interpretation
@@ -130,45 +139,59 @@ def _generate_common_files(result_dir, database_name):
         pickle.dump(sacrificial_lca.activity_dict, f)
 
     # LCA parameter arrays
-    with open(common_files_dir/'tech_params.pickle', "wb") as f:
-        pickle.dump(sacrificial_lca.tech_params, f)
-    with open(common_files_dir/'bio_params.pickle', "wb") as f:
-        pickle.dump(sacrificial_lca.bio_params, f)
+    #with open(common_files_dir/'tech_params.pickle', "wb") as f:
+    #    pickle.dump(sacrificial_lca.tech_params, f)
+    #with open(common_files_dir/'bio_params.pickle', "wb") as f:
+    #    pickle.dump(sacrificial_lca.bio_params, f)
 
     # Mapping
     with open(common_files_dir/'IO_Mapping.pickle', "wb") as f:
         pickle.dump({v: k for k, v in mapping.items()}, f)
 
     # Indices
-    np.save(
-        common_files_dir/'tech_row_indices',
-        sacrificial_lca.technosphere_matrix.tocoo().row
-    )
-    np.save(
-        common_files_dir/'tech_col_indices',
-        sacrificial_lca.technosphere_matrix.tocoo().col
-    )
-    np.save(
-        common_files_dir/'bio_row_indices',
-        sacrificial_lca.biosphere_matrix.tocoo().row
-    )
-    np.save(
-        common_files_dir/'bio_col_indices',
-        sacrificial_lca.biosphere_matrix.tocoo().col
-    )
+    #np.save(
+    #    common_files_dir/'tech_row_indices',
+    #    sacrificial_lca.technosphere_matrix.tocoo().row
+    #)
+    #np.save(
+    #    common_files_dir/'tech_col_indices',
+    #    sacrificial_lca.technosphere_matrix.tocoo().col
+    #)
+    #np.save(
+    #    common_files_dir/'bio_row_indices',
+    #    sacrificial_lca.biosphere_matrix.tocoo().row
+    #)
+    #np.save(
+    #    common_files_dir/'bio_col_indices',
+    #    sacrificial_lca.biosphere_matrix.tocoo().col
+    #)
 
-    # Deterministic LCI results
-    print("Generating deterministic LCA results")
-    lci_dict = {}
+def _save_det_lci(result_dir, activity_codes, database_name, sacrificial_lca):
+    """Deterministic LCI results"""
+    print("\nGenerating deterministic results")
+    result_dir = Path(_check_result_dir(result_dir))
+    det_lci_dir = result_dir / "deterministic" / "LCI"
+    det_lci_dir.mkdir(parents=True, exist_ok=True)
+    sacrificial_lca.lci()
     for code in activity_codes:
         try:
             act = get_activity((database_name, code))
             sacrificial_lca.redo_lci({act: act.get('production amount', 1)})
-            lci_dict[code] = sacrificial_lca.inventory.sum(axis=1)
+            np.save(
+                str(det_lci_dir / "{}.npy".format(code)),
+                sacrificial_lca.inventory.sum(axis=1)
+            )
         except Exception as err:
             print("******************")
+            print(code)
             print(err)
             print("******************")
-            lci_dict[code] = "Missing"
-    with open(common_files_dir/'det_lci_dict.pickle', "wb") as f:
-        pickle.dump(lci_dict, f)
+
+
+def get_sacrificial_LCA(database_name):
+    """LCA object used to extract common file information"""
+    collector_functional_unit = {
+        act:act.get('production amount', 1)
+        for act in Database(database_name)
+    }
+    return LCA(collector_functional_unit)
