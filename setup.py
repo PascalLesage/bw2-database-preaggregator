@@ -12,7 +12,7 @@ f.close()
 
 setup(
     name='bw2preagg',
-    version="0.2",
+    version="0.2.1",
     packages=find_packages(),
     author="Pascal Lesage",
     author_email="pascal.lesage@polymtl.ca",
