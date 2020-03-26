@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../bw2preagg'))
 import sphinx_rtd_theme
+import bw2preagg
 
 # -- Project information -----------------------------------------------------
 
