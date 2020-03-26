@@ -2,8 +2,8 @@ import os
 from math import ceil
 import json
 from pathlib import Path
-act_list_fp = Path(r"C:\mypy\data\ei36preagg\common_files\ordered_activity_codes.json")
-io_dir = Path(".")
+act_list_fp = Path("/home/plesage/scratch/preagg_ei36co/common_files/ordered_activity_codes.json")
+io_dir = Path("/home/plesage/scratch/preagg_ei36co/lci")
 with open(act_list_fp, 'r') as f:
     all_activity_codes = json.load(f)
 chunks = lambda l, n: [l[i:i + n] for i in range(0, len(l), n)]
