@@ -80,7 +80,7 @@ def set_up_lci_calculations(activity_list, result_dir, worker_id, database_name,
         error messages.
     database_name : str
         Name of the LCI database
-    samples_batch : int, default=0
+    samples_batch : int
         Integer id for sample batch. Used for campaigns names and for
         generating a seed for the RNG. The maximum value is 14.
     project_name : str
@@ -145,8 +145,8 @@ def get_techno_dicts_translator(ref_techno_dict, new_techno_dict):
             new_techno_dict.keys()}
 
 
-def dispatch_lci_calculators(project_name, database_name, result_dir, samples_batch,
-                             parallel_jobs, slice_id=None, number_of_slices=None):
+def dispatch_lci_calculators(project_name, database_name, result_dir, samples_batch=0,
+                             parallel_jobs=1, slice_id=None, number_of_slices=None):
     """ Dispatches LCI array calculations to distinct processes (multiprocessing)
 
     If number_of_slices/slice_id are not None, then only a subset of database activities are processed.
@@ -167,7 +167,7 @@ def dispatch_lci_calculators(project_name, database_name, result_dir, samples_ba
     samples_batch : int, default=0
         Integer id for sample batch. Used for campaigns names and for
         generating a seed for the RNG. The maximum value is 14.
-    parallel_jobs : int
+    parallel_jobs : int, default=1
         Number of parallel jobs to run using multiprocessing
     slice_id : int, default=None
         ID of slice. Useful when calculations are split across many computers or jobs on a computer cluster.

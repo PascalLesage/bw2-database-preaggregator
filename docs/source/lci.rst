@@ -26,7 +26,7 @@ Each :term:`samples_batch` has its own :ref:`subdirectory <file_structure>`
       of iterations (one batch). These "batches" can then be concatenated into arrays with the required
       number of iterations.
 
-      2- :term:`parallel_jobs`: Allows the parallel calculation of LCI arrays on multiple CPU of a given computer.
+      2- :term:`parallel_jobs`: Allows the parallel calculation of LCI arrays on multiple CPU of a given computer (default=1).
 
       3- :term:`slices`: Useful on computer clusters, allows further splitting up of the activity list into smaller slices
       and sending these to different jobs.
