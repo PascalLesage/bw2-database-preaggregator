@@ -22,7 +22,9 @@ setup(
         'numpy',
         'pyprind',
         'presamples',
-        'click'
+        'click',
+        'bw2waterbalancer',
+        'bw2landbalancer'
     ],
     url="https://github.com/PascalLesage/bw2-database-preaggregator",
     long_description=readme,
