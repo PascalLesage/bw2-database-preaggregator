@@ -54,11 +54,19 @@ Structure of the result_dir
 .. code-block:: text
 
     ├── common_files
+    │   ├── A_as_coo.xlsx (Row index, Col index, value for deterministic A matrix)
+    │   ├── A_as_coo_scipy.pickle (deterministic A matrix as SciPy sparse COO matrix)
     │   ├── activity_dict.pickle
+    │   ├── B_as_coo.xlsx (Row index, Col index, value for deterministic B matrix)
+    │   ├── B_as_coo_scipy.pickle (deterministic B matrix as SciPy sparse COO matrix)
     │   ├── bio_dict.pickle
+    │   ├── biosphere_description.xlsx (description of elementary flows in B matrix, per row index)
+    │   ├── cfs.npy (array with characterization factors, methods as columns and elementary flows as rows)
+    │   ├── cfs.xlsx (same as cfs.npy, but in Excel, with method names in columns)
     │   ├── IO_Mapping.pickle
     │   ├── ordered_activity_codes.json
-    │   └── product_dict.pickle
+    │   ├── product_dict.pickle
+    │   └── technosphere_description.xlsx (description of products/activities in A matrix, per index)
     ├── presamples
     │   ├── base_0 (base presamples package, samples_batch id=0)
     │   ├── water_0 (water exchange balancing presamples package, samples_batch id=0)
