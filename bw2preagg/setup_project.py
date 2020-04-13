@@ -7,6 +7,7 @@ from pathlib import Path
 import pickle
 import json
 import numpy as np
+import pandas as pd
 from brightway2 import *
 from .utils import missing_useful_files, _check_result_dir
 
@@ -138,33 +139,126 @@ def _generate_common_files(result_dir, database_name, sacrificial_lca):
     with open(common_files_dir/'activity_dict.pickle', "wb") as f:
         pickle.dump(sacrificial_lca.activity_dict, f)
 
-    # LCA parameter arrays
-    #with open(common_files_dir/'tech_params.pickle', "wb") as f:
-    #    pickle.dump(sacrificial_lca.tech_params, f)
-    #with open(common_files_dir/'bio_params.pickle', "wb") as f:
-    #    pickle.dump(sacrificial_lca.bio_params, f)
+    # A matrix values, as coo
+    with open(common_files_dir / "A_as_coo_scipy.pickle", "wb") as f:
+        pickle.dump(sacrificial_lca.technosphere_matrix.tocoo(), f)
+    df = pd.DataFrame(
+        columns=['row', 'col', 'value'],
+        data=np.concatenate(
+            [
+                sacrificial_lca.technosphere_matrix.tocoo().row.reshape(-1, 1),
+                sacrificial_lca.technosphere_matrix.tocoo().col.reshape(-1, 1),
+                sacrificial_lca.technosphere_matrix.tocoo().data.reshape(-1, 1)
+            ], axis=1)
+    )
+    df.to_excel(common_files_dir / "A_as_coo.xlsx")
+
+    # B matrix values, as coo
+    with open(common_files_dir / "B_as_coo_scipy.pickle", "wb") as f:
+        pickle.dump(sacrificial_lca.biosphere_matrix.tocoo(), f)
+    df = pd.DataFrame(
+        columns=['row', 'col', 'value'],
+        data=np.concatenate(
+            [
+                sacrificial_lca.biosphere_matrix.tocoo().row.reshape(-1, 1),
+                sacrificial_lca.biosphere_matrix.tocoo().col.reshape(-1, 1),
+                sacrificial_lca.biosphere_matrix.tocoo().data.reshape(-1, 1)
+            ], axis=1)
+    )
+    df.to_excel(common_files_dir / "B_as_coo.xlsx")
+
+    # A row and col descriptions
+    df = pd.DataFrame(columns=[
+        'index',
+        'activity name',
+        'location',
+        'ecoinvent activity uuid',
+        'activity brightway2 code',
+        'reference product name',
+        'reference product amount',
+        'reference product unit',
+        'ecoinvent product uuid',
+        'CPC',
+        'EcoSpold01Categories',
+        'ISIC rev.4 ecoinvent',
+    ]
+    )
+    db_loaded = Database(database_name).load()
+    rev_product_dict = {v:k for k, v in sacrificial_lca.product_dict.items()}
+    for index in rev_product_dict:
+        assert sacrificial_lca.activity_dict[rev_product_dict[index]]==index
+        act_key = rev_product_dict[index]
+        act = db_loaded[act_key]
+        classifications = {c[0]: c[1] for c in act['classifications']}
+        data = [
+            index,
+            act['name'],
+            act['location'],
+            act['filename'][0:36],
+            act_key[1],
+            act['reference product'],
+            act['production amount'],
+            act['unit'],
+            act['filename'][37: 37+36],
+            classifications.get('CPC', ''),
+            classifications.get('EcoSpold01Categories', ''),
+            classifications.get('ISIC rev.4 ecoinvent', ''),
+        ]
+        df.loc[index] = data
+    df = df.set_index('index')
+    df.to_excel(common_files_dir / "technosphere_description.xlsx")
+    db_loaded = None
+    df = None
+
+    # B row and col descriptions
+    df = pd.DataFrame(columns=[
+        'index',
+        'name',
+        'unit',
+        'compartment',
+        'subcompartment',
+        'type',
+        'ecoinvent uuid',
+        'brightway2 code',
+    ]
+    )
+    db_loaded = Database('biosphere3').load()
+    rev_bio_dict = {v:k for k, v in sacrificial_lca.biosphere_dict.items()}
+    for index in rev_bio_dict:
+        act_key = rev_bio_dict[index]
+        act = db_loaded[act_key]
+        cats = act['categories']
+        subcat = cats[1] if len(cats) == 2 else ""
+        data = [
+            index,
+            act['name'],
+            act['unit'],
+            cats[0],
+            subcat,
+            act['type'],
+            act['code'],
+            act_key[1]
+        ]
+        df.loc[index] = data
+    df = df.set_index('index')
+    df.to_excel(common_files_dir / "biosphere_description.xlsx")
+    db_loaded = None
+    df = None
+
+    # CFs
+    good_methods = [m for m in methods if "obsolete" not in str(m)]
+    cfs = np.zeros(shape=(len(sacrificial_lca.biosphere_dict), len(good_methods)))
+    for i, m in enumerate(good_methods):
+        sacrificial_lca.switch_method(m)
+        cfs[:, i] = sacrificial_lca.characterization_matrix.sum(axis=1).ravel()
+    np.save(str(common_files_dir / "cfs.npy"), cfs)
+    df = pd.DataFrame(columns=good_methods, data=cfs)
+    df.to_excel(common_files_dir / "cfs.xlsx")
 
     # Mapping
     with open(common_files_dir/'IO_Mapping.pickle', "wb") as f:
         pickle.dump({v: k for k, v in mapping.items()}, f)
 
-    # Indices
-    #np.save(
-    #    common_files_dir/'tech_row_indices',
-    #    sacrificial_lca.technosphere_matrix.tocoo().row
-    #)
-    #np.save(
-    #    common_files_dir/'tech_col_indices',
-    #    sacrificial_lca.technosphere_matrix.tocoo().col
-    #)
-    #np.save(
-    #    common_files_dir/'bio_row_indices',
-    #    sacrificial_lca.biosphere_matrix.tocoo().row
-    #)
-    #np.save(
-    #    common_files_dir/'bio_col_indices',
-    #    sacrificial_lca.biosphere_matrix.tocoo().col
-    #)
 
 def _save_det_lci(result_dir, activity_codes, database_name, sacrificial_lca):
     """Deterministic LCI results"""
