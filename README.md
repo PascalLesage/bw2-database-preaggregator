@@ -1,5 +1,5 @@
-README
---------
+bw2preagg - Brightway2 database preaggregator
+-----------------------------------------------
 
 bw2preagg is used to generate dependently sampled LCI and LCIA arrays for whole databases.
 
